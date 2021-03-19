@@ -7,6 +7,10 @@ Rails.application.routes.draw do
         post :auth, to: 'authentication#create'
         get  '/auth' => 'authentication#fetch'
       end
+      namespace :users do
+        post :auth, to: 'authentication#create'
+        get  '/auth' => 'authentication#fetch'
+      end
     end
   end
 end
