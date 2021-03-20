@@ -12,7 +12,16 @@ Rails.application.routes.draw do
         post :auth, to: 'authentication#create'
         get  '/auth' => 'authentication#fetch'
       end
-      resources :applications
+      resources :applications , param: :token do
+        resources :chats , param: :number do
+          member do
+            put :removeChatMember, param: :token
+            put :addChatMember, param: :token
+          end
+        end
+      end
+      get 'chat/addChatMember'
+      get 'chat/removeChatMember'
       get 'post/index'
     end
   end

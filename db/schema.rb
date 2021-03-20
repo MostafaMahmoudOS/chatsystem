@@ -10,16 +10,33 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_03_20_002908) do
+ActiveRecord::Schema.define(version: 2021_03_20_141156) do
 
   create_table "applications", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
     t.string "name"
     t.string "token"
-    t.integer "chats_number", default: 0
+    t.integer "chats_count", default: 0
     t.bigint "client_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["client_id"], name: "index_applications_on_client_id"
+  end
+
+  create_table "chats", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+    t.string "name"
+    t.integer "chat_number"
+    t.integer "messages_count", default: 0
+    t.bigint "application_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["application_id"], name: "index_chats_on_application_id"
+  end
+
+  create_table "chats_users", id: false, options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
+    t.bigint "chat_id"
+    t.bigint "user_id"
+    t.index ["chat_id"], name: "index_chats_users_on_chat_id"
+    t.index ["user_id"], name: "index_chats_users_on_user_id"
   end
 
   create_table "clients", options: "ENGINE=InnoDB DEFAULT CHARSET=utf8", force: :cascade do |t|
@@ -42,9 +59,13 @@ ActiveRecord::Schema.define(version: 2021_03_20_002908) do
     t.datetime "remember_created_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "code"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
   add_foreign_key "applications", "clients"
+  add_foreign_key "chats", "applications"
+  add_foreign_key "chats_users", "chats"
+  add_foreign_key "chats_users", "users"
 end
