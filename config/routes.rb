@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  
   devise_for :clients, controllers: { registrations: 'api/v1/clients/registrations' }
   devise_for :users, controllers: { registrations: 'api/v1/users/registrations' }
   namespace :api do
@@ -11,6 +12,8 @@ Rails.application.routes.draw do
         post :auth, to: 'authentication#create'
         get  '/auth' => 'authentication#fetch'
       end
+      resources :applications
+      get 'post/index'
     end
   end
 end
