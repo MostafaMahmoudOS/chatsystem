@@ -18,6 +18,7 @@ Rails.application.routes.draw do
             put :removeChatMember, param: :token
             put :addChatMember, param: :token
           end
+          resources :messages , param: :number
         end
       end
     end
