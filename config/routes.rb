@@ -20,9 +20,6 @@ Rails.application.routes.draw do
           end
         end
       end
-      get 'chat/addChatMember'
-      get 'chat/removeChatMember'
-      get 'post/index'
     end
   end
 end
