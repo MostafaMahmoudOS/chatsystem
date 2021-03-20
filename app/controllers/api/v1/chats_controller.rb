@@ -1,21 +1,31 @@
 class Api::V1::ChatsController < ApplicationController
-  before_action :set_chat, only: [:show, :update, :destroy]
-  before_action :set_application, only: [:create]
   before_action :authenticate_client!
+  before_action :set_application
+  before_action :set_chat, only: [:show, :update, :destroy,:addChatMember,:removeChatMember]
+  before_action :chat_member_params, only: [:addChatMember,:removeChatMember]
+  before_action :set_chat_member, only: [:addChatMember,:removeChatMember]
 
-  # GET /api/v1/applications/:application_token/chats
+  # GET /api/v1/applications/:token/chats
   def index
-    @chats = Chat.all
-
-    render json: @chats
+    if @application
+      @chats = Chat.where("application_id",@application.id)
+      render json: @chats
+    else 
+      render json: {error:"Application Not Found"}, status: :not_found
+    end  
   end
 
-  # GET /api/v1/applications/:application_token/1
+  # GET /api/v1/applications/:application_token/chats/:number/
   def show
-    render json: @chat
+    puts @chat.chat_number
+    if @chat
+      render json: @chat
+    else 
+      render json: {error:"Chat Not Found"}, status: :not_found
+    end
   end
 
-  # POST /api/v1/applications/:application_token/chats
+  # POST /api/v1/applications/:application_token/chats/
   def create
     if @application
       @chat = Chat.new(name: chat_params[:name],application:@application)
@@ -31,7 +41,7 @@ class Api::V1::ChatsController < ApplicationController
     
   end
 
-  # PATCH/PUT /api/v1/applications/:application_token/:chat_number/
+  # PATCH/PUT /api/v1/applications/:application_token/chats/:number/
   def update
     if @chat.update(chat_update_params)
       render json: @chat
@@ -39,23 +49,41 @@ class Api::V1::ChatsController < ApplicationController
       render json: @chat.errors, status: :unprocessable_entity
     end
   end
-  # PATCH/PUT /api/v1/applications/:application_token/appliction_token/:chat_number/member
+  # PATCH/PUT /api/v1/applications/:application_token/chats/:number/member
   def addChatMember
-    if @chat.update(chat_update_params)
-      render json: @chat
+    if @chat
+      if @member
+        if @chat.users.exists?(@member.id)
+          render json:  {error: "Member already exist"}, status: :unprocessable_entity
+        else
+          @chat.users << @member
+          render json: @chat
+        end
+      else
+        render json: {error: "Member NotFound"}, status: :unprocessable_entity
+      end
     else
-      render json: @chat.errors, status: :unprocessable_entity
+      render json: {error: "Chat NotFound"}, status: :unprocessable_entity
     end
   end
-  # DELETE /api/v1/applications/:application_token/appliction_token/:chat_number/member
+  # DELETE /api/v1/applications/:application_token/appliction_token/:number/member
   def removeChatMember
-    if @chat.update(chat_update_params)
-      render json: @chat
+    if @chat
+      if @member
+        if @chat.users.exists?(@member.id)
+           @chat.users.delete(@member)
+           render json: @chat
+        else
+          render json:  {error: "Member Not exist in chat"}, status: :unprocessable_entity
+        end
+      else
+        render json: {error: "Member NotFound"}, status: :unprocessable_entity
+      end
     else
-      render json: @chat.errors, status: :unprocessable_entity
+      render json: {error: "Chat NotFound"}, status: :unprocessable_entity
     end
   end
-  # DELETE /api/v1/applications/:application_token/appliction_token/:chat_number
+  # DELETE /api/v1/applications/:application_token/appliction_token/:number
   def destroy
     @chat.destroy
   end
@@ -63,10 +91,18 @@ class Api::V1::ChatsController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_chat
-      @chat = Chat.find_by(appliction_token: params[:application_token],chat_number: params[:chat_number])
+      if @application
+        @chat = Chat.find_by(application: @application.id,chat_number: params[:number])
+      else 
+        @chat = nil
+      end    
     end
     def set_application
-      @application = Application.find_by(token: params[:application_token])
+      @application = Application.find_by(client_id:current_client.id,token: params[:application_token])
+    end
+    def set_chat_member
+      puts params
+      @member = User.find_by(code: params[:chat][:member_id])
     end
     # Only allow a trusted parameter "white list" through.
     def chat_params
