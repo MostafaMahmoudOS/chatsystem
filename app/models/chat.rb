@@ -4,6 +4,7 @@ class Chat < ApplicationRecord
     before_create :set_chat_number
     validates :application_id,:name ,presence: true
     validates :name, :uniqueness => true
+    has_many :messages
     def set_chat_number
         self.chat_number= (self.application.chats.count)+1;
     end

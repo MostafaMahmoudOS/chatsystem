@@ -3,5 +3,6 @@ class Client < ApplicationRecord
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
-  has_and_belongs_to_many :chat       
+  has_and_belongs_to_many :chat
+  has_many :messages       
 end
