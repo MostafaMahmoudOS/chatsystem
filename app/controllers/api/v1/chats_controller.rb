@@ -17,7 +17,6 @@ class Api::V1::ChatsController < ApplicationController
 
   # GET /api/v1/applications/:application_token/chats/:number/
   def show
-    puts @chat.chat_number
     if @chat
       render json: @chat
     else 
