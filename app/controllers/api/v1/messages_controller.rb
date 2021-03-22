@@ -1,19 +1,20 @@
 class Api::V1::MessagesController < ApiController
   before_action :authenticate_user!
   before_action :set_message, only: [:show, :update, :destroy]
-  before_action :set_application, only: [:create]
-  before_action :set_chat, only: [:create]
-
+  before_action :set_application, only: [:create,:index]
+  before_action :set_chat, only: [:create,:index]
+  before_action :search_params, only: [:index]
   # GET /messages
   def index
-    @messages = Message.search('foobar').records
-    render json: @messages
+    unless params[:q].blank?
+      puts @chat.id
+      @messages = @chat ? Message.search(search_params[:q],@chat.id).records : []
+    else
+      @messages=[]
+    end  
+    render json: @messages , root: 'messages'
   end
 
-  # GET /messages/1
-  def show
-    render json: @message
-  end
 
   # POST /messages
   def create
@@ -30,20 +31,6 @@ class Api::V1::MessagesController < ApiController
     end  
   end
 
-  # PATCH/PUT /messages/1
-  def update
-    if @message.update(message_params)
-      render json: @message
-    else
-      render json: @message.errors, status: :unprocessable_entity
-    end
-  end
-
-  # DELETE /messages/1
-  def destroy
-    @message.destroy
-  end
-
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_message
@@ -57,6 +44,13 @@ class Api::V1::MessagesController < ApiController
     def set_chat
       if @application
         @chat = Chat.find_by(application: @application.id,chat_number: params[:chat_number])
+        if @chat
+          if @chat.users.exists?(current_user.id) 
+            @chat=@chat
+          else 
+            @chat=nil
+          end  
+        end
       else 
         @chat=nil
       end
@@ -64,5 +58,7 @@ class Api::V1::MessagesController < ApiController
     def set_application
       @application = Application.find_by(token: params[:application_token])
     end
-
+    def search_params
+      params.permit(:q)
+    end
 end
