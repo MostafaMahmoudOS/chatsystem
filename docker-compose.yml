@@ -1,0 +1,61 @@
+version: "3.3"
+services:
+  db:
+    image: "mysql:5.7"
+    restart: always
+    environment:
+     MYSQL_ROOT_PASSWORD: root
+     MYSQL_USERNAME: root
+     MYSQL_PASSWORD: root
+        - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - db:/var/run/mysqld
+    logging:
+            driver: none
+    ports:
+      - "13306:3306"
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch-oss:7.6.0
+    container_name: elasticsearch-rails-searchapp
+    environment:  
+      - discovery.type=single-node
+      - cluster.name=elasticsearch-rails
+      - cluster.routing.allocation.disk.threshold_enabled=false
+    volumes:
+      - data01:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - chat    
+  web:
+    build: .
+    command: bundle exec rails s -p 3000 -e development -b '0.0.0.0'
+    environment:
+     DB_USERNAME: root
+     DB_PASSWORD: root
+     DB_NAME: chatsystem_db
+     DB_PORT: 3306
+     DB_HOST: db
+     RAILS_ENV: development
+     RAILS_MAX_THREADS: 5
+     BUNDLE_PATH: /bundle
+    volumes:
+      - .:/chatsystem
+      - bundle:/bundle
+    ports:
+      - "3000:3000"
+    networks:
+      - chat  
+    depends_on:
+      - "db"
+      - "elastic"
+volumes:
+  db:
+  bundle:
+  data01:
+    driver: local
+networks:
+  chat:
+    driver: bridge  
